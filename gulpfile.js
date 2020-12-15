@@ -11,6 +11,7 @@ const svgSprite = require('gulp-svg-sprite');
 const ttf2woff = require('gulp-ttf2woff');
 const ttf2woff2 = require('gulp-ttf2woff2');
 const fs = require('fs');
+const del = require('del');
 
 // FONTS
 const fonts = () => {
@@ -128,6 +129,10 @@ const resources = () => {
   return src('./src/resources/**').pipe(dest('./app/'));
 };
 
+/// CLEAN
+const clean = () => {
+  return del(['app/*']);
+};
 /// WATCH FILES
 const watchFiles = () => {
   browserSync.init({
@@ -152,12 +157,9 @@ exports.htmlIncludes = htmlIncludes;
 exports.watchFiles = watchFiles;
 
 exports.default = series(
-  htmlIncludes,
-  fonts,
+  clean,
+  parallel(htmlIncludes, fonts, resources, imgToApp, svgSprites),
   fontsStyle,
   styles,
-  imgToApp,
-  svgSprites,
-  resources,
   watchFiles
 );
