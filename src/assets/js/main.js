@@ -1,2 +1,2 @@
 import { abc } from './test';
-abc();
+import { testWebP } from './utils/webpsupport';
