@@ -12,6 +12,10 @@ const ttf2woff = require('gulp-ttf2woff');
 const ttf2woff2 = require('gulp-ttf2woff2');
 const fs = require('fs');
 const del = require('del');
+const webpack = require('webpack');
+const webpackStream = require('webpack-stream');
+const uglify = require('gulp-uglify-es').default;
+const tinypng = require('gulp-tinypng-compress');
 
 // FONTS
 const fonts = () => {
@@ -83,7 +87,7 @@ const styles = () => {
       })
     )
     .pipe(sourcemaps.write('.'))
-    .pipe(dest('./app/css/'))
+    .pipe(dest('./app/assets/css/'))
     .pipe(browserSync.stream());
 };
 
@@ -133,6 +137,37 @@ const resources = () => {
 const clean = () => {
   return del(['app/*']);
 };
+
+// WEBPACK AND JAVASCRIPT
+const scripts = () => {
+  return src('./src/assets/js/main.js')
+    .pipe(
+      webpackStream({
+        output: {
+          filename: 'main.js',
+        },
+        module: {
+          rules: [
+            {
+              test: /\.m?js$/,
+              exclude: /node_modules/,
+              use: {
+                loader: 'babel-loader',
+                options: {
+                  presets: [['@babel/preset-env', { targets: 'defaults' }]],
+                },
+              },
+            },
+          ],
+        },
+      })
+    )
+    .pipe(sourcemaps.init())
+    .pipe(uglify().on('error', notify.onError()))
+    .pipe(sourcemaps.write('.'))
+    .pipe(dest('./app/assets/js'))
+    .pipe(browserSync.stream());
+};
 /// WATCH FILES
 const watchFiles = () => {
   browserSync.init({
@@ -150,6 +185,7 @@ const watchFiles = () => {
   watch('./src/resources/**', resources);
   watch('./src/assets/fonts/**', fonts);
   watch('./src/assets/fonts/**', fontsStyle);
+  watch('./src/assets/js/**/*.js', scripts);
 };
 
 exports.styles = styles;
@@ -158,8 +194,84 @@ exports.watchFiles = watchFiles;
 
 exports.default = series(
   clean,
-  parallel(htmlIncludes, fonts, resources, imgToApp, svgSprites),
+  parallel(htmlIncludes, scripts, fonts, resources, imgToApp, svgSprites),
   fontsStyle,
   styles,
   watchFiles
+);
+
+/// PRODUCTION
+
+const compressImg = () => {
+  return src([
+    './src/assets/img/**.jpg',
+    './src/assets/img/**.png',
+    './src/assets/img/**.jpeg',
+  ])
+    .pipe(
+      tinypng({
+        key: 'API_KEY',
+      })
+    )
+    .pipe(dest('./app/assets/img/'));
+};
+
+const stylesBuild = () => {
+  return src('./src/scss/**/*.scss')
+    .pipe(
+      sass({
+        outputStyle: 'expanded',
+      }).on('error', notify.onError())
+    )
+    .pipe(
+      rename({
+        suffix: '.min',
+      })
+    )
+    .pipe(
+      autoprefixer({
+        cascade: false,
+      })
+    )
+    .pipe(
+      cleanCSS({
+        level: 2,
+      })
+    )
+    .pipe(dest('./app/assets/css/'));
+};
+
+const scriptsBuild = () => {
+  return src('./src/assets/js/main.js')
+    .pipe(
+      webpackStream({
+        output: {
+          filename: 'main.js',
+        },
+        module: {
+          rules: [
+            {
+              test: /\.m?js$/,
+              exclude: /node_modules/,
+              use: {
+                loader: 'babel-loader',
+                options: {
+                  presets: [['@babel/preset-env', { targets: 'defaults' }]],
+                },
+              },
+            },
+          ],
+        },
+      })
+    )
+    .pipe(uglify().on('error', notify.onError()))
+    .pipe(dest('./app/assets/js'));
+};
+
+exports.build = series(
+  clean,
+  parallel(htmlIncludes, scriptsBuild, fonts, resources, imgToApp, svgSprites),
+  fontsStyle,
+  stylesBuild,
+  compressImg
 );
