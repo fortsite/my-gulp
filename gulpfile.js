@@ -18,7 +18,7 @@ const uglify = require('gulp-uglify-es').default;
 const tinypng = require('gulp-tinypng-compress');
 const webp = require('gulp-webp');
 const webphtml = require('gulp-webp-html');
-
+const webpcss = require('gulp-webpcss');
 /// Пути
 
 // FONTS
@@ -85,6 +85,7 @@ const styles = () => {
         cascade: false,
       })
     )
+    .pipe(webpcss({}))
     .pipe(
       cleanCSS({
         level: 2,

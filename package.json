@@ -33,7 +33,9 @@
     "gulp-uglify-es": "^2.0.0",
     "gulp-webp": "^4.0.1",
     "gulp-webp-html": "^1.0.2",
+    "gulp-webpcss": "^1.1.1",
     "node-sass": "^5.0.0",
+    "webp-converter": "^2.2.3",
     "webpack": "^5.10.2",
     "webpack-stream": "^6.1.1"
   }
