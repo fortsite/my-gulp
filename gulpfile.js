@@ -16,6 +16,10 @@ const webpack = require('webpack');
 const webpackStream = require('webpack-stream');
 const uglify = require('gulp-uglify-es').default;
 const tinypng = require('gulp-tinypng-compress');
+const webp = require('gulp-webp');
+const webphtml = require('gulp-webp-html');
+
+/// Пути
 
 // FONTS
 const fonts = () => {
@@ -100,6 +104,7 @@ const htmlIncludes = () => {
         basepath: '@file',
       })
     )
+    .pipe(webphtml())
     .pipe(dest('./app'))
     .pipe(browserSync.stream());
 };
@@ -110,7 +115,9 @@ const imgToApp = () => {
     './src/assets/img/**.jpg',
     './src/assets/img/**.png',
     './src/assets/img/**.jpeg',
-  ]).pipe(dest('./app/assets/img/'));
+  ])
+    .pipe(webp())
+    .pipe(dest('./app/assets/img/'));
 };
 
 /// SVG SPRITE
@@ -208,6 +215,7 @@ const compressImg = () => {
     './src/assets/img/**.png',
     './src/assets/img/**.jpeg',
   ])
+    .pipe(webp())
     .pipe(
       tinypng({
         key: 'API_KEY',
